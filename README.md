@@ -7,8 +7,10 @@ Home assistant configuration is provided as well.
 
 Fill all config entries in `config.py` to connect to wifi network.
 
+Set `network_id` in config to None and pull main unit out of socket for a moment
+to enter into linkin mode. After finding out network id, set it in a config.
 
-Note: `fan.py` has hardcoded netword id (`rx_addr` and `tx_addr`) that you are assumed to know, as linking sequence is not included in the code and emulated remote with hardcoded id 89 (dec).
+Note: emulates remote with hardcoded id 89 (dec). To be fixed
 
 Note: for some reason my unit runs on frequency of zehnder, while it's labeled as buva. See `fan.py`.
 

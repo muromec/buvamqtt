@@ -1,9 +1,7 @@
 import machine
-import fan
 
 def loop(mqtt, station):
   while station.isconnected():
-    fan.Fan.inspect()
     try:
       mqtt.ping()
       mqtt.ping()

@@ -3,17 +3,10 @@
 fan:
   - platform: mqtt
     name: 'buva_fan'
-    command_topic: "home/fan/speed"
-    state_topic: 'home/fan'
+    command_topic: "home/fan"
     speed_command_topic: "home/fan/speed"
-    speed_state_topic: 'home/fan'
-
-    payload_on: "2"
-    payload_off: "1"
-    state_value_template: "{{ '2' if float(value) > 1 else '1' }}"
-    payload_low_speed: "2"
-    payload_medium_speed: "3"
-    payload_high_speed: "4"
+    state_topic: 'home/fan'
+    speed_state_topic: 'home/fan/speed'
 
     speeds:
       - "off"

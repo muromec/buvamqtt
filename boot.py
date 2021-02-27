@@ -13,4 +13,6 @@ station.connect(config.wifi_network, config.wifi_password)
 while not station.isconnected():
   time.sleep(0.1)
 
-dup.start(config.log_host, config.log_port)
+# uncomment following line to enable debug output:
+#dup.start(config.log_host, config.log_port)
+# run `nc -k -u -l -p $port` on $log_host to see debug output.

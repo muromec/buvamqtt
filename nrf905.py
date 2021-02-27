@@ -2,6 +2,13 @@
 import time
 from machine import SPI, Pin
 
+def be32(buf):
+  addr = buf[0]
+  addr |= buf[1] << 8
+  addr |= buf[2] << 16
+  addr |= buf[3] << 24
+  return addr
+
 class NRF:
   def __init__(self):
     self.retrans_n = 0
@@ -57,8 +64,9 @@ class NRF:
     return rbuf
 
   def configure(self,
+    rx_addr,
     channel, band, tx_power, rx_power, retrans,
-    rx_addr, rx_addr_width, tx_addr_width, rx_width, tx_width,
+    rx_addr_width, tx_addr_width, rx_width, tx_width,
     clckout, clckout_enable, xtal, crc):
 
     rbuf = bytearray(11)
@@ -109,10 +117,7 @@ class NRF:
     rx_width = rbuf[4] & 0x3F
     tx_width = rbuf[5] & 0x3F
 
-    rx_addr = rbuf[6]
-    rx_addr |= rbuf[7] << 8
-    rx_addr |= rbuf[8] << 16
-    rx_addr |= rbuf[9] << 24
+    rx_addr = be32(rbuf[6:])
 
     clckout = (4000000 >> (rbuf[10] & 0x03))
     clckout_enable = bool(rbuf[10] & 0x04)
@@ -141,7 +146,7 @@ class NRF:
   def get_addr(self):
     rbuf = bytearray(5)
     rbuf[0] = 0x23
-    return self.transact(rbuf)
+    return be32(self.transact(rbuf)[1:])
 
   def read_frame(self):
     rbuf = bytearray(33)

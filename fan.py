@@ -1,7 +1,7 @@
-import nrf905
+from nrf905 import NRF, be32
 
-#channel = 117 # 868200000  buva
-channel = 118 # 868400000 zehnder
+channel_buva = 117 # 868200000
+channel_zehnder = 118 # 868400000
 band = True
 tx_power = 0x03
 rx_power = False
@@ -11,62 +11,73 @@ tx_addr_width = 4
 rx_width = 16
 tx_width = 16
 
-rx_addr = 0xA55A5AA5 # link
-rx_addr = 0xe0101010 # real CHANGE THIS
+LINK_ADDR = 0xA55A5AA5
 
 clckout = 500000
 clckout_enable = False
 xtal = 16000000
 crc = 16
 
-tx_addr = 0xA55A5AA5 # link
-tx_addr = 0x01010101 # real CHANGE THIS
-conf = (
-  channel, band, tx_power, rx_power, retrans,
-  rx_addr, rx_addr_width, tx_addr_width, rx_width, tx_width,
+conf_buva = (
+  channel_buva, band, tx_power, rx_power, retrans,
+  rx_addr_width, tx_addr_width, rx_width, tx_width,
   clckout, clckout_enable, xtal, crc
 )
-
-def frame_handler(rbuf):
-  cmd = {
-    2: 'set_speed',
-    3: 'set_timer',
-    5: 'speed_ack',
-    7: 'settings',
-  }.get(rbuf[6]) or rbuf[6]
-  plen = rbuf[7]
-  payload = rbuf[8:8+plen]
-
-  msg = {'ttype': rbuf[3], 'tid': rbuf[4], 'cmd': cmd, 'payload': payload}
-  print(msg)
-
-  if cmd == 'set_speed' or cmd == 'settings':
-    Fan.speed = payload[0]
-
-  if Fan.cb:
-    Fan.cb(Fan)
+conf_zehnder = (channel_zehnder, ) + conf_buva[1:]
 
 
 class Fan:
-  speed = 0
-  cb = None
+  def __init__(self, model='zehnder', network_id=None):
 
-  def set_speed(speed):
-    Fan.speed = speed
+    self.speed = 0
+    self.cb = None
+    self.model = model
+    self.network_id = LINK_ADDR if network_id is None else network_id
+
+    self.nrf = NRF()
+    self.configure_nrf()
+    self.nrf.listen(self.frame_handler)
+
+  def configure_nrf(self):
+    conf = conf_buva if self.model == 'buva' else conf_zehnder
+    self.nrf.read_config()
+    self.nrf.configure(self.network_id, *conf)
+
+  def set_cb(self, cb):
+    self.cb = cb
+
+  def set_speed(self, speed):
+    if self.speed == speed:
+      return
+
+    self.speed = speed
 
     buf = bytearray(b'\x01\x00\x03\x00\xfa\x02\x01\x01')
     buf[7] = speed
     buf[3] = 89 # remote id
-    nrf.send_frame(tx_addr, buf)
+    self.nrf.send_frame(self.network_id, buf)
 
-  def inspect():
-    nrf.read_config()
-    print('nrf config', nrf._config)
-    
+  def frame_handler(self, rbuf):
+    cmd = {
+      2: 'set_speed',
+      3: 'set_timer',
+      5: 'speed_ack',
+      6: 'link_ad',
+      7: 'settings',
+    }.get(rbuf[6]) or rbuf[6]
+    plen = rbuf[7]
+    payload = rbuf[8:8+plen]
 
+    msg = {'ttype': rbuf[3], 'tid': rbuf[4], 'cmd': cmd, 'payload': payload}
+    print(msg)
 
-nrf = nrf905.NRF()
-nrf.read_config()
-nrf.configure(*conf)
+    if cmd == 'set_speed' or cmd == 'settings':
+      self.speed = payload[0]
 
-nrf.listen(frame_handler)
+    if cmd == 'link_ad' and self.network_id == LINK_ADDR:
+      self.network_id = be32(payload)
+      print('got network id', hex(self.network_id))
+      self.configure_nrf()
+
+    if self.cb:
+      self.cb(self)

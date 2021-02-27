@@ -11,3 +11,6 @@ wifi_password = '**'
 # see boot.py
 log_host = '192.168.X.Y'
 log_port = 1234
+
+fan_model = 'zehnder' # zehnder or buva
+fan_network = None # set None to enter linking mode, set network id if known
