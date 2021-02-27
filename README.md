@@ -15,3 +15,11 @@ Note: for some reason my unit runs on frequency of zehnder, while it's labeled a
 # Hardware
 
 See https://github.com/eelcohn/nRF905-API/blob/master/HARDWARE.md for hardware setup.
+
+# Thanks
+
+This was build upon existing research:
+
+- https://github.com/eelcohn/ZehnderComfoair
+- https://github.com/eelcohn/nRF905-API/
+- https://gathering.tweakers.net/forum/list_messages/1728169
