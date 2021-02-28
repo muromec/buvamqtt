@@ -157,7 +157,6 @@ class NRF:
     return rbuf
 
   def send_frame(self, tx_addr, buf, retrans_n=10):
-    print('send frame')
     self.retrans_n = retrans_n
     self.mode_idle()
     self.set_addr(tx_addr)

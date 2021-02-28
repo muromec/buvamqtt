@@ -28,7 +28,6 @@ conf_zehnder = (channel_zehnder, ) + conf_buva[1:]
 
 class Fan:
   def __init__(self, model='zehnder', network_id=None):
-
     self.speed = 0
     self.cb = None
     self.model = model
@@ -37,6 +36,10 @@ class Fan:
     self.nrf = NRF()
     self.configure_nrf()
     self.nrf.listen(self.frame_handler)
+
+  @property
+  def is_ready(self):
+    return self.network_id != LINK_ADDR
 
   def configure_nrf(self):
     conf = conf_buva if self.model == 'buva' else conf_zehnder
@@ -74,7 +77,7 @@ class Fan:
     if cmd == 'set_speed' or cmd == 'settings':
       self.speed = payload[0]
 
-    if cmd == 'link_ad' and self.network_id == LINK_ADDR:
+    if cmd == 'link_ad' and not self.is_ready:
       self.network_id = be32(payload)
       print('got network id', hex(self.network_id))
       self.configure_nrf()
